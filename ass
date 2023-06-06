@@ -336,3 +336,57 @@ insert into student (S_name , marks) values('Yash',45),('Pranav',15),('om',5);
 
 
 
+3. relation.....
+
+create table person (driverid int (5), name varchar(20), primary key(driverid));
+CREATE Table car
+(License varchar(10), Model varchar(10),
+year integer(4), DriverID integer(5), foreign key(Driverid) references person(Driverid));
+ CREATE Table Accident
+(ReportNumber varchar(10), Location varchar(20), Date date, DriverID integer(5), foreign key(Driverid) references person(Driverid));
+
+
+INSERT INTO person (driverid, name) VALUES
+(1, 'John'),
+(2, 'Jane'),
+(3, 'Michael');
+
+
+INSERT INTO car (License, Model, Year, DriverID) VALUES
+('ABC123', 'Toyota', 2020, 1),
+('XYZ789', 'Honda', 2018, 2),
+('DEF456', 'Ford', 2019, 3);
+
+INSERT INTO Accident (ReportNumber, Location, Date, DriverID) VALUES
+('RPT001', 'Intersection A', '2023-05-01', 1),
+('RPT002', 'Highway B', '2023-06-02', 2),
+('RPT003', 'Parking Lot C', '2023-04-15', 3);
+
+alter table person
+add address varchar(40);
+
+alter table car 
+modify column model varchar(20);
+
+select * from person where driverid > 1;
+select * from car where year <= 2018;
+
+select *from car where year <=2018 AND model ='honda';
+select * from car where model ='ford'or model ='honda';
+
+select * from person where name like 'J%';
+
+select * from car where year<to_char(sysdate,'YYYY')-5;
+
+select max(year)from car where Model = 'toyota';
+select min(year)from car where license ='ABC123';
+
+select dayname(year) from car where license ='XYZ789';
+
+select date(year)from car where license='XYZ789';
+
+ 
+
+
+
+
