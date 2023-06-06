@@ -1,0 +1,338 @@
+2.
+CREATE DATABASE A;
+USE A;
+
+CREATE TABLE employee (
+  emp_name VARCHAR(50),
+  street VARCHAR(50),
+  city VARCHAR(50)
+);
+
+CREATE TABLE works (
+  emp_name VARCHAR(50),
+  company_name VARCHAR(50),
+  salary DECIMAL(10, 2)
+);
+
+CREATE TABLE company (
+  company_name VARCHAR(50),
+  city VARCHAR(50)
+);
+
+CREATE TABLE manager (
+  emp_name VARCHAR(50),
+  manager_name VARCHAR(50)
+);
+
+
+-- Employee Table
+INSERT INTO employee (emp_name, street, city)
+VALUES ('om', 'FC road', 'pune'),
+       ('amol', 'JM road', 'Pune'),
+       ('arya', 'main road ', 'nagpur'),
+       ('shiv', 'on road', 'mumbai');
+
+-- Works Table
+INSERT INTO works (emp_name, company_name, salary)
+VALUES ('om', 'ABC Ltd', 15000),
+       ('amol', 'XYZ Corp', 18000),
+       ('arya', 'ABC Ltd', 12000),
+       ('shiv', 'ABC Ltd', 22000);
+
+-- Company Table
+INSERT INTO company (company_name, city)
+VALUES ('ABC Ltd', 'Pune'),
+       ('XYZ Corp', 'Pune'),
+       ('PQR Inc', 'mumbai');
+
+-- Manager Table
+INSERT INTO manager (emp_name, manager_name)
+VALUES ('om', 'abc'),
+       ('amol', 'asc'),
+       ('arya', 'are'),
+       ('shiv', 'op');
+
+
+SELECT e.emp_name, e.street, e.city
+FROM employee e
+JOIN works w ON e.emp_name = w.emp_name
+JOIN company c ON w.company_name = c.company_name
+WHERE w.salary BETWEEN 10000 AND 20000
+  AND c.company_name = 'ABC Ltd';
+  
+SELECT e.emp_name, e.street, e.city
+FROM employee e
+JOIN works w ON e.emp_name = w.emp_name
+JOIN company c ON w.company_name = c.company_name
+WHERE e.city = c.city;
+
+SELECT e.emp_name, e.street, e.city
+FROM employee e
+JOIN works w ON e.emp_name = w.emp_name
+WHERE w.salary > (
+  SELECT MAX(w2.salary)
+  FROM works w2
+  JOIN company c2 ON w2.company_name = c2.company_name
+  WHERE c2.company_name = 'ABC Ltd'
+);
+
+SELECT c.company_name
+FROM company c
+JOIN works w ON c.company_name = w.company_name
+GROUP BY c.company_name
+ORDER BY COUNT(*) DESC
+LIMIT 1;
+
+SELECT c.company_name
+FROM company c
+JOIN works w ON c.company_name = w.company_name
+GROUP BY c.company_name
+ORDER BY SUM(w.salary) ASC
+LIMIT 1;
+
+SELECT c.company_name
+FROM company c
+JOIN works w ON c.company_name = w.company_name
+GROUP BY c.company_name
+HAVING AVG(w.salary) > (
+  SELECT AVG(w2.salary)
+  FROM works w2
+  JOIN company c2 ON w2.company_name = c2.company_name
+  WHERE c2.company_name = 'Central Bank'
+);
+
+SELECT emp_name, street, city
+FROM employee
+WHERE city LIKE 'P%';
+
+SELECT emp_name, street, city
+FROM employee
+WHERE street LIKE '%fc road';
+
+
+
+
+
+5.Write and execute suitable database triggers. Consider row level and statement level triggers.
+The price of a product changes constantly. It is important to maintain the history of the prices of the products. Create a trigger to update the 'product_price_history' table when the price of the product is updated in the 'product' table. 
+Create the 'product' table and 'product_price_history' table 
+CREATE TABLE product_price_history (product_id number(5), product_name varchar2(32), supplier_name varchar2(32), unit_price number(7,2) );
+CREATE TABLE product (product_id number(5), product_name varchar2(32), 
+supplier_name varchar2(32), unit_price number(7,2) );
+-------------------------------------------------------------------------
+create table product (pid int primary key, pname varchar(25),supplier_name varchar(30
+),unitprice int);
+insert into product values (101,'Maggi','Nestle',15),(102,'Chocolate','KitKat',5),(10
+3,'Cadbury','Dairy milk',25);
+select * from product ;
+create table product_price_history (Pid int ,Pname varchar(30),SupplierName varchar(3
+2),unitPrice int);
+alter table product_price_history add constraint primary key pk_(Pid);
+delimiter //
+mysql> create trigger upd_price
+     before update on product
+     for each row
+     begin
+    insert into product_price_history values (old.pid , old.pname ,old.supplier_name , old.unitprice);
+   end ;
+  end //
+ delimiter ;
+ update product set unitprice = 3*unitprice where pname ="Cadbury";
+select * from product;
+select * from product_price_history ;
+
+
+6.Consider tableStudent(rollnumber,name,sub1,sub2,sub3,total). Create procedure to calculate total marks of all the students. Demonstrate its use.
+-----------------------------------------------------------------------------------------------------------------------------------------
+create table student(RollNo int primary key auto_increment , name varchar(30),sub1 int , sub2 int , sub3 int , total int);
+
+ insert into student(name ,sub1,sub2,sub3) values ('Sandip',45,50,35);
+insert into student(name ,sub1,sub2,sub3) values ('Pranav',60,50,95),('Atharva',40,55,15),('Siddhu',85,90,35),('Yash',75,60,35);
+
+select * from student;
+ delimiter //
+create procedure total (in name varchar(10),
+                            in sub1 int,
+                            in sub2 int,
+                            in sub3 int)
+     begin
+       declare name1 varchar(10);
+       declare sub11 int;
+       declare sub12 int;
+       declare sub13 int;
+       declare total_marks int;
+    
+       set name1 = name;
+       set sub11 = sub1;
+       set sub12 = sub2;
+       set sub13 = sub3;
+       set total_marks = sub11 + sub12 + sub13;
+       update student set total = total_marks where student.name = name1;
+     end;
+     end //
+
+
+select * from student //
+call total ('Pranav',60,50,95);
+     //
+call total ('Atharva',40,55,15)//
+select * from student //
+call total ('Sandip',45,50,35);
+     //
+
+7.
+mysql> DELIMITER //
+mysql> CREATE FUNCTION calculateTotalMarks(name_param VARCHAR(10), sub1_param INT, sub2_param INT, sub3_param INT) RETURNS INT DETERMINISTIC
+     BEGIN
+         DECLARE total_marks INT;
+    
+         SET total_marks = sub1_param + sub2_param + sub3_param;
+    
+         UPDATE student SET total = total_marks WHERE name = name_param;
+    
+         RETURN total_marks;
+     END //
+ DELIMITER ;
+ SELECT calculateTotalMarks('Pranav', 60, 50, 95) AS total_marks;
+
+
+
+
+8.cursor
+create table student (rollnumber int primary key,name varchar(30),sub1 int,sub2 int,sub3 int,total int,Percent int,Grade varchar(30));
+insert into student(rollnumber ,name ,sub1,sub2,sub3) values  (1,'Sandip',35,40,55),(2,'Pranav',65,50,85),(3,'Atharva',48,65,50);
+
+DELIMITER //
+ CREATE PROCEDURE updateStudentMarks()
+     BEGIN
+         DECLARE v_sname VARCHAR(30);
+         DECLARE v_s1 INT;
+         DECLARE v_s2 INT;
+         DECLARE v_s3 INT;
+         DECLARE v_total INT;
+         DECLARE v_percent INT;
+         DECLARE v_grade VARCHAR(30);
+         DECLARE v_finished INT DEFAULT 0;
+    
+         DECLARE cur CURSOR FOR SELECT name, sub1, sub2, sub3 FROM student;
+        DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_finished = 1;
+    
+         OPEN cur;
+    
+         marks_loop: LOOP
+             FETCH cur INTO v_sname, v_s1, v_s2, v_s3;
+    
+             IF v_finished = 1 THEN
+                 LEAVE marks_loop;
+             END IF;
+    
+             SET v_total := v_s1 + v_s2 + v_s3;
+             SET v_percent := v_total / 3;
+    
+             IF v_percent >= 90 THEN
+                 SET v_grade := 'A';
+             ELSEIF v_percent >= 80 THEN
+                 SET v_grade := 'B';
+             ELSEIF v_percent >= 70 THEN
+                 SET v_grade := 'C';
+             ELSEIF v_percent >= 60 THEN
+                 SET v_grade := 'D';
+             ELSE
+                 SET v_grade := 'F';
+             END IF;
+    
+             UPDATE student
+             SET total = v_total, Percent = v_percent, Grade = v_grade
+             WHERE name = v_sname;
+         END LOOP;
+    
+         CLOSE cur;
+        SELECT 'Student marks updated successfully.' AS Message;
+     END //
+DELIMITER ;
+ CALL updateStudentMarks();
+
+
+
+9.view
+
+create table employee(emp_name varchar(30) not null,street varchar(80),city varchar(40));
+create table works(emp_name varchar(30), company_name varchar(40),salary int);
+create table company(company_name varchar(40), city varchar(50));
+ create table manager(emp_name varchar(30), manager_name varchar(50));
+
+CREATE VIEW EMPCOMPANY AS
+     SELECT e.emp_name, e.street, e.city, w.company_name, w.salary
+     FROM employee e
+     JOIN works w ON e.emp_name = w.emp_name;
+
+create view EMPMANAGER as select e.emp_name,e.street,e.city ,c.company_name, m.manager_name from employee e join company c join manager m on e.emp_name = m.emp_name ;
+
+ insert into employee values ('Sandip' , 'Solapur road ','Pune'),('Pranav' , 'Saswad road ','Pune');
+select * from employee;
+ select * from EMPCOMPANY;
+insert into works values ('Sandip' , 'Google',2000000),('Pranav' , 'Microsoft',1000000);
+ insert into company values ('Google','Pune'),('Microsoft','Delhi');
+ insert into manager values ('Sandip' , 'Om'),('Pranav' , 'Raj');
+select * from EMPCOMPANY;
+select * from EMPMANAGER;
+update EMPCOMPANY set street = 'Pune road' where emp_name ='Sandip';
+select * from employee;
+update EMPMANAGER set manager_name= 'Atharva ' where emp_name ='Sandip';
+select * from manager;
+
+
+10.procedure
+ CREATE TABLE student (
+      Roll_No int primary key auto_increment,
+       S_name varchar(30),
+       marks int,
+      status varchar(10) );
+
+ desc student;
+
+
+ insert into student (S_name , marks) values('Sandip',35);
+
+
+insert into student (S_name , marks) values('Yash',45),('Pranav',15),('om',5);
+
+
+ select * from student;
+
+
+ delimiter //
+ create procedure UpdateStudent(in mark int)
+    begin
+     declare mark1 int;
+     set mark1 = mark;
+     if mark1 > 35 then
+     update student set status="Pass" where student.marks = mark1;
+     else
+     update student set status="Fail" where student.marks = mark1;
+     end if ;
+     end //
+
+
+ call UpdateStudent(45);
+    //
+
+
+ select * from student;
+     //
+
+
+ delimiter ;
+ call UpdateStudent(15);
+
+ call UpdateStudent(35);
+
+ call UpdateStudent(45);
+
+
+ call UpdateStudent(5);
+
+ select * from student;
+
+
+
